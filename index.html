@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Permintaan Ambulance</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" referrerpolicy="no-referrer" />
+    <!-- Tambahkan jsPDF untuk pembuatan PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Tambahkan html2canvas untuk capture form menjadi gambar -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #e74c3c;
+            --secondary-color: #f8f9fa;
+            --accent-color: #3498db;
+            --text-color: #333;
+            --light-text: #777;
+            --border-color: #ddd;
+            --success-color: #28a745;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        
+        .logo-icon {
+            font-size: 2.5rem;
+            margin-right: 15px;
+            color: var(--primary-color);
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            font-size: 1.8rem;
+        }
+        
+        .subtitle {
+            color: var(--light-text);
+            font-size: 1rem;
+        }
+        
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            gap: 20px;
+        }
+        
+        .form-column {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .address-field {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .file-input {
+            padding: 8px;
+            background-color: var(--secondary-color);
+        }
+        
+        .form-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e2e6ea;
+        }
+        
+        .emergency-note {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #fff3cd;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .emergency-note p {
+            margin: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .form-column {
+                flex: 100%;
+            }
+            
+            .form-footer {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+
+        /* Styles for PDF template */
+        #pdfTemplate {
+            display: none;
+            width: 210mm;
+            padding: 20mm;
+            background-color: white;
+        }
+
+        .pdf-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .pdf-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .pdf-content {
+            margin-bottom: 30px;
+        }
+
+        .pdf-row {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .pdf-label {
+            width: 150px;
+            font-weight: bold;
+        }
+
+        .pdf-value {
+            flex: 1;
+        }
+
+        .pdf-footer {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-box {
+            width: 45%;
+            text-align: center;
+        }
+
+        .signature-line {
+            margin-top: 70px;
+            border-top: 1px solid black;
+            padding-top: 5px;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .share-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .share-btn {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .whatsapp-btn {
+            background-color: #25D366;
+            color: white;
+        }
+
+        .download-btn {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-icon {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="formContainer">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">🚑</div>
+                <h1>Form Permintaan Ambulance</h1>
+            </div>
+            <p class="subtitle">Silakan isi formulir di bawah ini untuk permintaan layanan ambulance</p>
+        </header>
+        
+        <form id="ambulanceForm">
+            <div class="form-row">
+                <div class="form-column">
+                    <div class="form-group">
+                        <label for="Date">Tanggal</label>
+                        <input type="date" id="Date" name="Date" required>
+                    </div>
+                </div>
+                <div class="form-column">
+                    <div class="form-group">
+                        <label for="Nama">Nama Lengkap</label>
+                        <input type="text" id="Nama" name="Nama" placeholder="Masukkan nama lengkap" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-column">
+                    <div class="form-group">
+                        <label for="Waktu_Jemput">Waktu Jemput</label>
+                        <input type="time" id="Waktu_Jemput" name="Waktu_Jemput" required>
+                    </div>
+                </div>
+                <div class="form-column">
+                    <div class="form-group">
+                        <label for="Telepon">Nomor Telepon</label>
+                        <input type="tel" id="Telepon" name="Telepon" placeholder="Contoh: 628123456789" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="Alamat_Jemput">Alamat Jemput</label>
+                <textarea id="Alamat_Jemput" name="Alamat_Jemput" class="address-field" placeholder="Masukkan alamat lengkap untuk penjemputan" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="Alamat_Tujuan">Alamat Tujuan</label>
+                <textarea id="Alamat_Tujuan" name="Alamat_Tujuan" class="address-field" placeholder="Masukkan alamat tujuan" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="Perihal">Perihal</label>
+                <input type="text" id="Perihal" name="Perihal" placeholder="Tujuan penggunaan ambulance" required>
+            </div>
+
+            <div class="form-group">
+                <label for="Driver_Ambulance">Driver Ambulance</label>
+                <input type="text" id="Driver_Ambulance" name="Driver_Ambulance" placeholder="Siapa Pengemudi ambulance!" required>
+            </div>
+
+            <div class="form-group">
+                <label for="Kordinasi_By">Kordinasi By</label>
+                <input type="text" id="Kordinasi_By" name="Kordinasi_By" placeholder="Saksi Di TKP...!" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="Foto">Foto (Opsional)</label>
+                <input type="file" id="Foto" name="Foto" class="file-input" accept="image/*">
+            </div>
+            
+            <div class="form-footer">
+                <button type="reset" class="btn btn-secondary">Reset</button>
+                <button type="submit" class="btn btn-primary">Kirim Permintaan</button>
+            </div>
+        </form>
+        
+        <div class="emergency-note">
+            <p>Untuk kondisi darurat, silakan hubungi langsung ke nomor darurat kami di <b>081263263257</b></p>
+        </div>
+    </div>
+
+    <!-- Template untuk PDF -->
+    <div id="pdfTemplate">
+        <div class="pdf-header">
+            <div class="pdf-title">SURAT JALAN AMBULANCE</div>
+            <div>Nomor: AMB/<span id="pdf-nomor"></span>/<?php echo date('Y'); ?></div>
+        </div>
+
+        <div class="pdf-content">
+            <div class="pdf-row">
+                <div class="pdf-label">Tanggal:</div>
+                <div class="pdf-value" id="pdf-tanggal"></div>
+            </div>
+            <div class="pdf-row">
+                <div class="pdf-label">Waktu Jemput:</div>
+                <div class="pdf-value" id="pdf-waktu"></div>
+            </div>
+            <div class="pdf-row">
+                <div class="pdf-label">Nama Pasien:</div>
+                <div class="pdf-value" id="pdf-nama"></div>
+            </div>
+            <div class="pdf-row">
+                <div class="pdf-label">Telepon:</div>
+                <div class="pdf-value" id="pdf-telepon"></div>
+            </div>
+            <div class="pdf-row">
+                <div class="pdf-label">Alamat Jemput:</div>
+                <div class="pdf-value" id="pdf-alamat-jemput"></div>
+            </div>
+            <div class="pdf-row">
+                <div class="pdf-label">Alamat Tujuan:</div>
+                <div class="pdf-value" id="pdf-alamat-tujuan"></div>
+            </div>
+            <div class="pdf-row">
+                <div class="pdf-label">Perihal:</div>
+                <div class="pdf-value" id="pdf-perihal"></div>
+            </div>
+            <div class="pdf-row">
+                <div class="pdf-label">Driver Ambulance:</div>
+                <div class="pdf-value" id="pdf-driver"></div>
+            </div>
+            <div class="pdf-row">
+                <div class="pdf-label">Koordinasi:</div>
+                <div class="pdf-value" id="pdf-koordinasi"></div>
+            </div>
+        </div>
+
+        <div class="pdf-footer">
+            <div class="signature-box">
+                <div>Driver Ambulance</div>
+                <div class="signature-line" id="pdf-driver-nama"></div>
+            </div>
+            <div class="signature-box">
+                <div>Koordinator</div>
+                <div class="signature-line" id="pdf-koordinator-nama"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal untuk berbagi -->
+    <div id="shareModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Surat Jalan Berhasil Dibuat!</h2>
+            <p>Silakan pilih cara untuk membagikan surat jalan ambulance:</p>
+            
+            <div class="share-buttons">
+                <a href="#" id="whatsappShareBtn" class="share-btn whatsapp-btn">
+                    <i class="fab fa-whatsapp btn-icon"></i>
+                    Bagikan ke WhatsApp
+                </a>
+                <a href="#" id="downloadPdfBtn" class="share-btn download-btn">
+                    <i class="fas fa-download btn-icon"></i>
+                    Download PDF
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Tambahkan namespace jsPDF
+        const { jsPDF } = window.jspdf;
+        
+        // Fungsi untuk format tanggal menjadi dd-MM-yyyy
+        function formatDate(date) {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${day}-${month}-${year}`;
+        }
+        
+        // Set tanggal default ke hari ini
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const formattedDateForInput = formatISODate(today);
+            document.getElementById('Date').value = formattedDateForInput;
+        });
+
+        // Format tanggal untuk input type date (yyyy-MM-dd)
+        function formatISODate(date) {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Generate nomor acak untuk surat jalan
+        function generateNomor() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            return `${randomNum}/${month}/${year}`;
+        }
+
+        // Fungsi untuk membuat PDF
+        function generatePDF(formData) {
+            // Isi template PDF dengan data formulir
+            document.getElementById('pdf-nomor').textContent = generateNomor();
+            document.getElementById('pdf-tanggal').textContent = formatDate(formData.get('Date'));
+            document.getElementById('pdf-waktu').textContent = formData.get('Waktu_Jemput');
+            document.getElementById('pdf-nama').textContent = formData.get('Nama');
+            document.getElementById('pdf-telepon').textContent = formData.get('Telepon');
+            document.getElementById('pdf-alamat-jemput').textContent = formData.get('Alamat_Jemput');
+            document.getElementById('pdf-alamat-tujuan').textContent = formData.get('Alamat_Tujuan');
+            document.getElementById('pdf-perihal').textContent = formData.get('Perihal');
+            document.getElementById('pdf-driver').textContent = formData.get('Driver_Ambulance');
+            document.getElementById('pdf-koordinasi').textContent = formData.get('Kordinasi_By');
+            document.getElementById('pdf-driver-nama').textContent = formData.get('Driver_Ambulance');
+            document.getElementById('pdf-koordinator-nama').textContent = formData.get('Kordinasi_By');
+            
+            // Buat template PDF menjadi visible untuk diambil screenshotnya
+            const pdfTemplate = document.getElementById('pdfTemplate');
+            pdfTemplate.style.display = 'block';
+            
+            // Buat PDF menggunakan html2canvas dan jsPDF
+            return html2canvas(pdfTemplate, {
+                scale: 2, // Meningkatkan kualitas
+                useCORS: true,
+                logging: false
+            }).then(canvas => {
+                // Sembunyikan kembali template
+                pdfTemplate.style.display = 'none';
+                
+                const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgWidth = 210; // A4 width
+                const pageHeight = 297; // A4 height
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                
+                pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+                
+                // Beri nama file PDF
+                const fileName = `Surat_Jalan_Ambulance_${formData.get('Nama').replace(/\s+/g, '_')}.pdf`;
+                
+                return { pdf, fileName };
+            });
+        }
+        
+        // Fungsi untuk menampilkan modal berbagi
+        function showShareModal(pdfObject) {
+            const modal = document.getElementById('shareModal');
+            const closeBtn = document.querySelector('.close-btn');
+            const whatsappBtn = document.getElementById('whatsappShareBtn');
+            const downloadBtn = document.getElementById('downloadPdfBtn');
+            
+            // Tampilkan modal
+            modal.style.display = 'block';
+            
+            // Tutup modal ketika tombol close diklik
+            closeBtn.onclick = function() {
+                modal.style.display = 'none';
+            };
+            
+            // Tutup modal ketika klik di luar modal
+            window.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+            
+            // Set aksi untuk tombol download
+            downloadBtn.onclick = function() {
+                pdfObject.pdf.save(pdfObject.fileName);
+            };
+            
+            // Set aksi untuk tombol WhatsApp
+            whatsappBtn.onclick = function() {
+                // Simpan PDF ke Blob URL
+                const pdfBlob = pdfObject.pdf.output('blob');
+                const blobURL = URL.createObjectURL(pdfBlob);
+                
+                // Coba membuka WhatsApp dengan file
+                // Catatan: Ini akan membuka WhatsApp Web di desktop
+                // Di mobile, ini akan mencoba membuka aplikasi WhatsApp
+                const whatsappText = encodeURIComponent("Surat Jalan Ambulance - Silakan lihat dokumen terlampir");
+                const whatsappURL = `https://wa.me/?text=${whatsappText}`;
+                
+                // Buka WhatsApp
+                window.open(whatsappURL, '_blank');
+                
+                // Tawarkan download juga karena WhatsApp Web tidak bisa langsung melampirkan file
+                alert("WhatsApp tidak dapat melampirkan file secara otomatis. Silakan download PDF terlebih dahulu, lalu lampirkan secara manual di WhatsApp.");
+                
+                // Download file
+                const downloadLink = document.createElement('a');
+                downloadLink.href = blobURL;
+                downloadLink.download = pdfObject.fileName;
+                downloadLink.click();
+            };
+        }
+        
+        // Handle submit form
+        document.getElementById('ambulanceForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Buat FormData untuk kumpulkan data form
+            const formData = new FormData(this);
+            
+            // Generate PDF
+            generatePDF(formData).then(pdfObject => {
+                // Tampilkan modal berbagi
+                showShareModal(pdfObject);
+            }).catch(error => {
+                console.error('Error generating PDF:', error);
+                alert('Terjadi kesalahan saat membuat PDF. Silakan coba lagi.');
+            });
+            
+            // Kirim data ke Google Apps Script (opsional)
+            // Kode pengiriman data ke Google Apps Script
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbzejf4I4kXoRJcxI0pv47DlBvIUZLc-JtjZ_g00bv0KspVBdNy2Ru1DchDQH8pLInLg/exec';
+            
+            // Bentuk URLSearchParams untuk dikirim ke server
+            const formDataToSend = new URLSearchParams();
+            formData.forEach((value, key) => {
+                formDataToSend.append(key, value);
+            });
+            
+            // Kirim data ke Google Apps Script (uncomment jika diperlukan)
+            
+            fetch(scriptURL, {
+                method: 'POST',
+                body: formDataToSend
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+            
+        });
+    </script>
+</body>
+</html>
